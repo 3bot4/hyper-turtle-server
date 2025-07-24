@@ -1,36 +1,31 @@
 const express = require('express');
 const http = require('http');
-const socketIo = require('socket.io');
+const socketIO = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
-    cors: {
-        origin: '*',
-        methods: ['GET', 'POST']
-    }
+const io = socketIO(server, {
+    cors: { origin: '*' } // Adjust CORS for your client URL
 });
 
-app.get('/', (req, res) => {
-    res.send('Hyper Turtle Server');
-});
+let connectedUsers = 0;
 
 io.on('connection', (socket) => {
-    console.log('New user connected');
+    connectedUsers++;
+    io.emit('onlineCount', connectedUsers); // Broadcast updated count to all clients
 
     socket.on('join', (data) => {
-        socket.username = data.username; // Store username on socket
+        socket.username = data.username;
+        console.log(`${socket.username} joined`);
     });
 
     socket.on('message', (data) => {
-        io.emit('message', {
-            username: data.username,
-            message: data.message
-        });
+        io.emit('message', data); // Broadcast message to all clients
     });
 
     socket.on('disconnect', () => {
-        console.log('User disconnected');
+        connectedUsers--;
+        io.emit('onlineCount', connectedUsers); // Broadcast updated count on disconnect
     });
 });
 
