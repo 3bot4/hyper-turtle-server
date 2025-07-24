@@ -18,8 +18,15 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
     console.log('New user connected');
 
+    socket.on('join', (data) => {
+        socket.username = data.username; // Store username on socket
+    });
+
     socket.on('message', (data) => {
-        io.emit('message', data);
+        io.emit('message', {
+            username: data.username,
+            message: data.message
+        });
     });
 
     socket.on('disconnect', () => {
